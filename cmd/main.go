@@ -2,7 +2,7 @@ package main
 
 import(
 	"fmt"
-	s3 "AlertBot/pkg/s3"
+	s3 "github.com/Group48LLC/AlertBot/pkg/s3"
 	
 )
 
@@ -12,4 +12,5 @@ func main(){
 		fmt.Println(err)
 	}
 	fmt.Println(res)
+	fmt.Println("Main Complete")
 }

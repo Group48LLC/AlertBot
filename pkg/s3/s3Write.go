@@ -14,7 +14,7 @@ import (
 		"github.com/aws/aws-sdk-go/service/s3"
 		"github.com/adshao/go-binance"
 
-		secret "AlertBot/pkg/secret"
+		secret "github.com/Group48LLC/AlertBot/pkg/secret"
 )
 
 
@@ -29,9 +29,6 @@ type S3Data struct{
 	UserId string
 	Balances []Listing
 }
-
-
-
 
 
 func GetAccountInfo(apiKey string, secretKey string) []Listing{

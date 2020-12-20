@@ -1,4 +1,4 @@
-module AlertBot
+module github.com/Group48LLC/AlertBot
 
 go 1.15
 
