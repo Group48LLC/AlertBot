@@ -12,28 +12,15 @@ import (
 		"github.com/aws/aws-sdk-go/service/s3"
 
 		secret "github.com/Group48LLC/AlertBot/pkg/secret"
+
 		myBinance "github.com/Group48LLC/AlertBot/pkg/myBinance"
+
+		models "github.com/Group48LLC/AlertBot/pkg/models"
 )
 
 
-type Listing struct{
-	Symbol string
-	Locked string
-	Free string
-	Total string
-}
-
-type S3Data struct{
-	UserId string
-	Balances []Listing
-}
-
-
-
-
-
-func CreateUserS3Data(inputUserId string, data[]Listing) S3Data{
-	returnValue := S3Data{
+func CreateUserUserBalanceData(inputUserId string, data models.UserBalances) models.UserBalanceData{
+	returnValue := models.UserBalanceData{
 		UserId: inputUserId,
 		Balances: data,
 	}
@@ -72,13 +59,13 @@ func UploadToS3(filePath string, userId string, jsonData []byte) error {
 }
 
 
-func CreateJSONFile(data S3Data, filePath string) []byte{
+func CreateJSONFile(data models.UserBalanceData, filePath string) []byte{
 	file, _ := json.MarshalIndent(data, "", " ")
 	return file
 }
 
 
-func WriteUserBalances(userId string) (string, error) {
+func WriteUserBalanceData(userId string) (string, error) {
 	// handles the request to api
 
 	start1 := time.Now()
@@ -99,8 +86,8 @@ func WriteUserBalances(userId string) (string, error) {
 	start2 := time.Now()
 	// timing binance call
 
-	accountBalances := GetAccountInfo(apiKey, apiSecret)
-	userIdBalances := CreateUserS3Data(userId, accountBalances)
+	accountBalances := myBinance.GetAccountInfo(apiKey, apiSecret)
+	userIdBalances := CreateUserUserBalanceData(userId, accountBalances)
 
 	t2 := time.Now() // end time
 	elapsed2 := t2.Sub(start2)
@@ -126,6 +113,7 @@ func WriteUserBalances(userId string) (string, error) {
 	fmt.Println("Binance api time: ", elapsed2)
 	fmt.Println("S3 Writing time: ", elapsed3)
 	returnValue := "----success----"
+	
 	return returnValue, nil
 }
 

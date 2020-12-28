@@ -1,0 +1,7 @@
+package monitorTrades
+
+
+func monitor(){
+	// 
+}
+
