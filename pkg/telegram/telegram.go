@@ -7,7 +7,7 @@ import (
 "encoding/json"
 )
 
-func sendAlert(text string, botApi string, chatId string) {
+func SendAlert(text string, botApi string, chatId string) {
 
 	requestUrl := "https://api.telegram.org/" + botApi + "/sendMessage"
 

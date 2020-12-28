@@ -13,8 +13,11 @@ import(
 
 	models "github.com/Group48LLC/AlertBot/pkg/models"
 	telegram "github.com/Group48LLC/AlertBot/pkg/telegram"
+	secret "github.com/Group48LLC/AlertBot/pkg/secret"
 
 )
+
+
 
 func GetAccountInfo(apiKey string, secretKey string) models.UserBalances{
 	// move to binance pkg //
@@ -98,15 +101,18 @@ func HandleTrade(result map[string]interface{}){
 	var tradeType string = result["S"].(string)
 	var tradeDetail string = result["o"].(string)
 	var tradeSymbol string = result["s"].(string)
+	// VAR CREATION move this to config model? or file? look into better way of doing this.
+	secretVars, err := secret.GetSecret()
+	telegramApi := secretVars["test1_telegram_api"]
 
 
 	marketCoinQty, err := strconv.ParseFloat(tradeQty, 64)
 	// checkError("QTY error", err)
 	marketCoinPrice, err := strconv.ParseFloat(price, 64)
-	checkError("QTY error", err)
+	
 	marketCoinTotal := marketCoinQty * marketCoinPrice // computes total
 	
-	
+	checkError("QTY error", err)
 	fmt.Println(timeStr)
 	fmt.Println("\n ", tradeType, " : ", tradeSymbol, " : ", tradeDetail) // trade type Buy/sell
 	fmt.Println("Order Qty", orderQty) // order qty
@@ -114,7 +120,7 @@ func HandleTrade(result map[string]interface{}){
 	fmt.Println("Price: ", price) // price
 	if (tradeType == "SELL"){
 		fmt.Println("You gained ", marketCoinTotal)
-		telegram.sendAlert("hello telegram", "botApi<TOKEN>", "<chatId>")
+		telegram.SendAlert("hello telegram", "botApi<TOKEN>", "<chatId>")
 	}
 	if (tradeType == "BUY"){
 		fmt.Println("You spent ", marketCoinTotal)
