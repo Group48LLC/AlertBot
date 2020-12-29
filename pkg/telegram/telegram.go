@@ -1,32 +1,39 @@
 package telegram
 
 import (
-"bytes"
-"fmt"
 "net/http"
-"encoding/json"
+"log"
+"io/ioutil"
+"net/url"
+
 )
 
-func SendAlert(text string, botApi string, chatId string) {
+func SendAlert(text string, botApi string, chatId string)(string, error) {
 
-	requestUrl := "https://api.telegram.org/" + botApi + "/sendMessage"
+	log.Printf("Sending %s to chat_id: %d", text, chatId)
+	var telegramApi string = "https://api.telegram.org/bot" + botApi + "/sendMessage"
+	response, err := http.PostForm(
+		telegramApi,
+		url.Values{
+			"chat_id": {chatId},
+			"text":    {text},
+		})
 
-	client := &http.Client{}
-
-	values := map[string]string{"text": text, "chatId": chatId }
-	jsonParams, _ := json.Marshal(values)
-
-	req, _:= http.NewRequest("POST", requestUrl, bytes.NewBuffer(jsonParams))
-	req.Header.Set("Content-Type", "application/json")
-
-	res, err := client.Do(req)
-
-	if(err != nil){
-		fmt.Println(err)
-	} else {
-		fmt.Println(res.Status)
-		// defer res.Body.Close()
+	if err != nil {
+		log.Printf("error when posting text to the chat: %s", err.Error())
+		return "", err
 	}
+	defer response.Body.Close()
+
+	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
+	if errRead != nil {
+		log.Printf("error in parsing telegram answer %s", errRead.Error())
+		return "", err
+	}
+	bodyString := string(bodyBytes)
+	log.Printf("Body of Telegram Response: %s", bodyString)
+
+	return bodyString, nil
 
 }
 

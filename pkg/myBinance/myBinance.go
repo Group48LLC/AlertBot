@@ -103,7 +103,7 @@ func HandleTrade(result map[string]interface{}){
 	var tradeSymbol string = result["s"].(string)
 	// VAR CREATION move this to config model? or file? look into better way of doing this.
 	secretVars, err := secret.GetSecret()
-	telegramApi := secretVars["test1_telegram_api"]
+	telegramApi := secretVars["test1_telegram_api"].(string)
 
 
 	marketCoinQty, err := strconv.ParseFloat(tradeQty, 64)
@@ -118,12 +118,25 @@ func HandleTrade(result map[string]interface{}){
 	fmt.Println("Order Qty", orderQty) // order qty
 	fmt.Println("Trade Qty: ", tradeQty) // trade qty
 	fmt.Println("Price: ", price) // price
+
+	var alertMessage string = `Trade Executed:` + "\n"
+	alertMessage += tradeType+ " : " + tradeSymbol + " : " + tradeDetail + "\n"
+	alertMessage += "Trade Qty: " + tradeQty + "\n"
+	alertMessage += "Order Qty: " + orderQty + "\n"
+	alertMessage += "Price: " + price
+	// chatIdNum := -1001219499639
+	// chatId := strconv.Itoa(chatIdNum)
+	chatId := "-1001219499639"
+	
+
+
 	if (tradeType == "SELL"){
 		fmt.Println("You gained ", marketCoinTotal)
-		telegram.SendAlert("hello telegram", "botApi<TOKEN>", "<chatId>")
+		telegram.SendAlert(alertMessage, telegramApi, chatId)
 	}
 	if (tradeType == "BUY"){
 		fmt.Println("You spent ", marketCoinTotal)
+		telegram.SendAlert(alertMessage, telegramApi, chatId)
 	}
 }
 
