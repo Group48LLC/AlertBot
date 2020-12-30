@@ -9,12 +9,16 @@ import(
 )
 
 func main(){
+	user := "test1"
+
 	secretVars, err := secret.GetSecret()
 	if err != nil {
 		fmt.Println(err)
 	}
-	apiKey := secretVars["test1_api_key"].(string)
-	apiSecret := secretVars["test1_api_secret"].(string)
+
+	// load in specific user keys
+	apiKey := secretVars[user + "_api_key"].(string)
+	apiSecret := secretVars[user + "_api_secret"].(string)
 
 
 	// fire off binance web sockets
