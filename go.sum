@@ -1,3 +1,5 @@
+github.com/Group48LLC/go-binance v2.2.0+incompatible h1:nj77eAU9+75sZp4rzaiSoJQ3+kykWMISD9PPcxWqowY=
+github.com/Group48LLC/go-binance v2.2.0+incompatible/go.mod h1:oToHVmg0XWbGkTZ9IiY8gVLN0kXJFW1h19y5rBGyans=
 github.com/adshao/go-binance v0.0.0-20201227031010-3a1b2eb11cbe h1:LbtTkq1O7gfbKislg9DWJ655WTmTljkFQnTClF0BPoo=
 github.com/adshao/go-binance v0.0.0-20201227031010-3a1b2eb11cbe/go.mod h1:XlIpE7brbCEQxp6VRouG/ZgjLjygQWE1xnc1DtQNp6I=
 github.com/aws/aws-sdk-go v1.36.16 h1:ycOrUsbKiBydQ3tM29Gu5abM4SyPKyjR4huOG/k3f8A=

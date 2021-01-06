@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
+// take in secret name?
 func GetSecret() (map[string]interface{}, error){
 	var secretVars map[string]interface{}
 
+	// subject to change? fee din vars? multi region
 	secretName := "binance-dev"
 	region := "us-east-1"
 
@@ -76,3 +78,8 @@ func GetSecret() (map[string]interface{}, error){
 	// Your code goes here.
 	return secretVars, err
 }
+
+// func AddToSecret(){
+// 	region := "us-east-1"
+// 	svc := secretsmanager.New(session.New(), aws.NewConfig().WithRegion(region))
+// }
