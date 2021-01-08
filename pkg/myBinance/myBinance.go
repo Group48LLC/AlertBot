@@ -2,17 +2,15 @@ package myBinance
 
 import(
 	"strconv"
-	"fmt"
 	"context"
+	"fmt"
 	// // "io/ioutil"
 	"encoding/json"
     // "net/http"
 	// "strings"
 	"log"
-	"github.com/adshao/go-binance"
-	"net/http"
-	"os"
 	"time"
+	"github.com/adshao/go-binance"
 	"github.com/gorilla/websocket"
 
 	models "github.com/Group48LLC/AlertBot/pkg/models"
@@ -21,116 +19,19 @@ import(
 
 )
 
-type WsHandler func(message []byte)
-type ErrHandler func(err error)
-type WsConfig struct {
-	Endpoint string
-}
-
 var (
-	baseURL         = "wss://stream.binance.com:9443/ws"
-	baseFutureURL   = "wss://fstream.binance.com/ws"
-	combinedBaseURL = "wss://stream.binance.com:9443/stream?streams="
-	// WebsocketTimeout is an interval for sending ping/pong messages if Websocket is enabled
+	baseURL         = "wss://stream.binance.us:9443/ws"
+	baseFutureURL   = "wss://fstream.binance.us/ws"
+	combinedBaseURL = "wss://stream.binance.us:9443/stream?streams="
+	// WebsocketTimeout is an interval for sending ping/pong messages if WebsocketKeepalive is enabled
 	WebsocketTimeout = time.Second * 60
 	// WebsocketKeepalive enables sending ping/pong messages to check the connection stability
 	WebsocketKeepalive = false
 )
 
-var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
-	c, _, err := websocket.DefaultDialer.Dial(cfg.Endpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	doneC = make(chan struct{})
-	stopC = make(chan struct{})
-	go func() {
-		// This function will exit either on error from
-		// websocket.Conn.ReadMessage or when the stopC channel is
-		// closed by the client.
-		defer close(doneC)
-		if WebsocketKeepalive {
-			keepAlive(c, WebsocketTimeout)
-		}
-		// Wait for the stopC channel to be closed.  We do that in a
-		// separate goroutine because ReadMessage is a blocking
-		// operation.
-		silent := false
-		go func() {
-			select {
-			case <-stopC:
-				silent = true
-			case <-doneC:
-			}
-			c.Close()
-		}()
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				if !silent {
-					errHandler(err)
-				}
-				return
-			}
-			handler(message)
-		}
-	}()
-	return
+type WsConfig struct {
+	Endpoint string
 }
-
-// newclient
-func NewClient(apiKey, secretKey string) *binance.Client {
-	return &binance.Client{
-		APIKey:     apiKey,
-		SecretKey:  secretKey,
-		BaseURL:    "https://api.binance.us",
-		UserAgent:  "Binance/golang",
-		HTTPClient: http.DefaultClient,
-		Logger:     log.New(os.Stderr, "Binance-golang ", log.LstdFlags),
-	}
-}
-
-// keepAlive
-func keepAlive(c *websocket.Conn, timeout time.Duration) {
-	ticker := time.NewTicker(timeout)
-
-	lastResponse := time.Now()
-	c.SetPongHandler(func(msg string) error {
-		lastResponse = time.Now()
-		return nil
-	})
-
-	go func() {
-		defer ticker.Stop()
-		for {
-			deadline := time.Now().Add(10 * time.Second)
-			err := c.WriteControl(websocket.PingMessage, []byte{}, deadline)
-			if err != nil {
-				return
-			}
-			<-ticker.C
-			if time.Since(lastResponse) > timeout {
-				c.Close()
-				return
-			}
-		}
-	}()
-}
-
-//newWsConfig
-func newWsConfig(endpoint string) *WsConfig {
-	return &WsConfig{
-		Endpoint: endpoint,
-	}
-}
-
-// WsUserDataServe serve user data handler with listen key
-func WsUserDataServe(listenKey string, handler WsHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
-	endpoint := fmt.Sprintf("%s/%s", baseURL, listenKey)
-	cfg := newWsConfig(endpoint)
-	return wsServe(cfg, handler, errHandler)
-}
-
 
 func GetAccountInfo(apiKey string, secretKey string) models.UserBalances{
 	// move to binance pkg //
@@ -176,9 +77,93 @@ func getRecentTrades(sym string){
 }
 
 
+func keepAlive(c *websocket.Conn, timeout time.Duration) {
+	ticker := time.NewTicker(timeout)
+
+	lastResponse := time.Now()
+	c.SetPongHandler(func(msg string) error {
+		lastResponse = time.Now()
+		return nil
+	})
+
+	go func() {
+		defer ticker.Stop()
+		for {
+			deadline := time.Now().Add(10 * time.Second)
+			err := c.WriteControl(websocket.PingMessage, []byte{}, deadline)
+			if err != nil {
+				return
+			}
+			<-ticker.C
+			if time.Since(lastResponse) > timeout {
+				c.Close()
+				return
+			}
+		}
+	}()
+}
+
+var wsServe = func(cfg *WsConfig, handler binance.WsHandler, errHandler binance.ErrHandler) (doneC, stopC chan struct{}, err error) {
+	c, _, err := websocket.DefaultDialer.Dial(cfg.Endpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	doneC = make(chan struct{})
+	stopC = make(chan struct{})
+	go func() {
+		// This function will exit either on error from
+		// websocket.Conn.ReadMessage or when the stopC channel is
+		// closed by the client.
+		defer close(doneC)
+		if binance.WebsocketKeepalive {
+			keepAlive(c, binance.WebsocketTimeout)
+		}
+		// Wait for the stopC channel to be closed.  We do that in a
+		// separate goroutine because ReadMessage is a blocking
+		// operation.
+		silent := false
+		go func() {
+			select {
+			case <-stopC:
+				silent = true
+			case <-doneC:
+			}
+			c.Close()
+		}()
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				if !silent {
+					errHandler(err)
+				}
+				return
+			}
+			handler(message)
+		}
+	}()
+	return
+}
+
+func WsUserDataServe(listenKey string, handler binance.WsHandler, errHandler binance.ErrHandler) (doneC, stopC chan struct{}, err error) {
+	endpoint := fmt.Sprintf("%s/%s", baseURL, listenKey)
+	cfg := newWsConfig(endpoint)
+	return wsServe(cfg, handler, errHandler)
+}
+
+
+func newWsConfig(endpoint string) *WsConfig {
+	return &WsConfig{
+		Endpoint: endpoint,
+	}
+}
+
+
 func GetListenKey(apiKey string, apiSecret string) string{
 	// return error also pass error along if thrown
+	
 	client := NewClient(apiKey, apiSecret)
+	// client.BaseURL = "https://api.binance.us"
+	fmt.Println(client)
 	res, err := client.NewStartUserStreamService().Do(context.Background())
 	if err != nil {
 		fmt.Println(err)
@@ -218,7 +203,7 @@ func HandleTrade(result map[string]interface{}){
 	var tradeSymbol string = result["s"].(string)
 	// VAR CREATION move this to config model? or file? look into better way of doing this.
 	secretVars, err := secret.GetSecret() // move to somethign different own secret
-	telegramApi := secretVars["test2_telegram_api"].(string)
+	telegramApi := secretVars["test1_telegram_api"].(string)
 
 
 	// marketCoinQty, err := strconv.ParseFloat(tradeQty, 64)
@@ -259,7 +244,7 @@ func HandleOrder(result map[string]interface{}){
 
 	// VAR CREATION move this to config model? or file? look into better way of doing this.
 	secretVars, err := secret.GetSecret() // move to somethign different own secret
-	telegramApi := secretVars["test2_telegram_api"].(string)
+	telegramApi := secretVars["test1_telegram_api"].(string)
 	
 	checkError("QTY error", err)
 	fmt.Println(timeStr)
@@ -280,10 +265,8 @@ func HandleOrder(result map[string]interface{}){
 
 func OpenSocket(listenKey string, trackOrders bool){
 	var result map[string]interface{}
-	fmt.Println("Opening Socket: " + listenKey)
-	myWsHandler := func(message []byte) {
-		fmt.Println("Handler activated")
-		fmt.Println(string(message))
+	wsHandler := func(message []byte) {
+		// fmt.Println(string(message))
 		json.Unmarshal(message, &result)
 		if result["e"] == "executionReport" { // valid results that ended with a market action (trade or order creation)	
 			fillQty, err := strconv.ParseFloat(result["z"].(string), 64) // converts string to float
@@ -300,7 +283,6 @@ func OpenSocket(listenKey string, trackOrders bool){
 				} else {
 					fmt.Println("Track Orders: ")
 					fmt.Println(trackOrders)
-
 				}
 			}
 			
@@ -310,7 +292,8 @@ func OpenSocket(listenKey string, trackOrders bool){
 	errHandler := func(err error) {
 		fmt.Println(err)
 	}
-	doneC, _, err := WsUserDataServe(listenKey, myWsHandler, errHandler)
+	
+	doneC, _, err := WsUserDataServe(listenKey, wsHandler, errHandler)
 	if err != nil {
 		fmt.Println(err)
 		return
