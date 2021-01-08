@@ -10,7 +10,7 @@ import(
 	// "strings"
 	"log"
 	"time"
-	"github.com/adshao/go-binance"
+	binance "github.com/Group48LLC/AlertBot/pkg/goBinance/"
 	"github.com/gorilla/websocket"
 
 	models "github.com/Group48LLC/AlertBot/pkg/models"
@@ -161,7 +161,7 @@ func newWsConfig(endpoint string) *WsConfig {
 func GetListenKey(apiKey string, apiSecret string) string{
 	// return error also pass error along if thrown
 	
-	client := NewClient(apiKey, apiSecret)
+	client := binance.NewClient(apiKey, apiSecret)
 	// client.BaseURL = "https://api.binance.us"
 	fmt.Println(client)
 	res, err := client.NewStartUserStreamService().Do(context.Background())

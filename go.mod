@@ -9,4 +9,5 @@ require (
 	github.com/aws/aws-sdk-go v1.36.16
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/gorilla/websocket v1.2.0
+	github.com/stretchr/testify v1.2.1
 )
