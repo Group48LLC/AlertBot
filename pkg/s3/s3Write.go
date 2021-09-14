@@ -35,7 +35,7 @@ func UploadToS3(filePath string, userId string, jsonData []byte) error {
 	// build these vars from env
 	const (
 		S3_REGION = "us-east-1"
-		S3_BUCKET = "g48-alert-bot-48"
+		S3_BUCKET = ""
 	)
 
 	s, err := session.NewSession(&aws.Config{Region: aws.String(S3_REGION)})
